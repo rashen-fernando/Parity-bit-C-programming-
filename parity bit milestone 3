@@ -1,0 +1,451 @@
+#include <math.h>
+#include <stdio.h>
+/*#include <cstddef>*/
+#include <string.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <limits.h>
+#include <stdbool.h>
+
+# include <stdio.h>
+# include <math.h>
+
+
+char* encode(int n,char msg[ ],char bin[ ])
+{
+    
+    for(int j=0;j<n;j++)
+    {
+    int m=msg[j];
+    int r;
+    for(int i=0;i<8;i++)
+    {
+            r=(int)m%(int)2;
+           if(r==1)
+           {
+               bin[8*j+7-i]='1';
+           }
+           else 
+           {
+               bin[8*j+7-i]='0';
+           }
+           
+           m=floor(m/2);
+
+        
+        
+    }
+    
+    }
+    
+ return bin;     
+}
+
+char* decode(int l,char* bitsq)
+{
+    
+    
+    char msg[l/8];
+    
+    for(int j=0;j<l/8;j++)
+    {
+        int num=0;
+    for(int i=8*j;i<8*j+8;i++)
+    {
+        num=num+(int)(bitsq[i]-'0')*(int)pow(2,7-(i-8*j));
+        
+    }
+    msg[j]=(char)num;
+     
+    }
+
+    
+    for(int k=0;msg[k]!='\0';k++)
+    {
+        printf("%c",msg[k]);
+    }
+    return 0;
+}
+
+int xor(int a,int b)
+{
+    if((a==1&&b==1)||(a==0&&b==0))
+    {
+        return 0;
+    }
+    else
+    {
+        return 1;
+    }
+}
+
+int ispoweroftwo(double a)
+{
+    double n=a;
+    while(n>1)
+    {
+        n=n/2;
+    }
+
+    if(n==1)
+    {
+        return 1;
+    }
+    else if(n<1)
+    {
+    return 0;
+    }
+    else {
+    return 0;
+    }
+}
+
+int parbit(int a)
+{
+    if (a%2==0)
+    {
+        return 0;
+    }
+    else {
+    return 1;
+    }
+}
+
+int* encrypt(int n,int k,char bitsq[ ],int encrypted[ ]);
+int* decrypt(int l,int k,char bitsq[ ],int decrypted[ ]);
+int* parritybits(int n,int k,int y,int parity[ ],int encrypted[ ]);
+char* correctparity(int L,int n,int k,char bitsq[ ],char recieve[ ]);
+
+int main() {
+    /* Enter your code here. Read input from STDIN. Print output to STDOUT */
+    char porc;
+    int N,k,L;
+    
+    char msg[1000];
+    char bitsq[10000];
+
+    scanf("%c",&porc);
+    if(porc=='P')
+    {
+        scanf("\n %d %d",&N,&k);
+        int encrypted[8*N+k-1];
+        scanf("\n %[^\n]*c",msg);
+        
+        encode(N,msg,bitsq);
+
+        for(int x=0;x<8*N+k-1;x++)
+        {
+            if(x>8*N-1)
+            {
+                encrypted[x]=0;   
+            }
+            else
+            {
+            encrypted[x]=(int)(bitsq[x]-'0');
+            }
+            
+        }
+        encrypt(N,k,bitsq,encrypted);
+
+        //initilizing parity array
+         int y=0;
+         while(pow(2,y)<=y+8*N+k-1+1)
+         {
+             y=y+1;
+         }
+         
+         int parity[8*N+k-1+y];
+            int p=0;
+         for(int i=1;i<=8*N+k-1+y;i++)
+         {
+             
+                 if(ispoweroftwo(i)==1)
+                 {
+                     
+                     parity[i-1]=8;
+                     p=p;
+                     
+                 }
+                 else 
+                 {
+                    parity[i-1]=encrypted[p];
+                   p=p+1;
+                 }
+             
+
+            
+             /*printf("%d",parity[i-1]);*/
+         }
+
+         //parity array is made
+
+        parritybits(N, k, y,parity,encrypted);
+
+        for(int i=0;i<8*N+k-1+y;i++)
+         {
+             printf("%d",parity[i]);
+         }
+        
+        
+        
+    }
+    else 
+    {
+        
+        scanf("\n %d %d %d",&N,&L,&k);
+        char recieve[10000];
+        
+        scanf("\n %[^\n]*c",recieve);
+        
+        correctparity(L,N,k,bitsq,recieve);
+
+
+        int de[8*N];
+        
+        char decopy[8*N];
+        
+        decrypt(8*N+k-1, k, bitsq,de);
+        
+        for(int e=0;e<8*N;e++)
+        {
+            decopy[e]=(char)de[e]+'0';
+            
+        }
+
+        decopy[8*N]='\0';
+        
+        decode(8*N,decopy);
+        
+
+        
+    }
+
+    return 0;
+}
+
+
+int* encrypt(int n,int k,char bitsq [ ],int encrypted[ ])
+{
+    int shift[k][8*n+k];
+    for(int j=0;j<k;j++)
+    {
+        
+        for(int i=0;i<8*n+k-1;i++)
+        {
+            if(i-j<0)
+            {
+              shift[j][i]=0;  
+            }
+            else if((int)(bitsq[i-j]-'0')!=0&&(int)(bitsq[i-j]-'0')!=1)
+            {
+              shift[j][i]=0;  
+            }
+            else
+            {
+            shift[j][i]=(int)(bitsq[i-j]-'0');
+            }
+            
+            
+        }
+        
+    }
+
+    for(int y=0;y<8*n+k-1;y++)
+    {
+        
+        for(int x=1;x<k;x++)
+        {
+            encrypted[y]=xor(encrypted[y],shift[x][y]);
+        }
+        
+       
+    }
+
+    
+    return encrypted;
+}
+
+
+
+int* decrypt(int l,int k,char bitsq[ ],int decrypted[ ])
+{
+   int shift[k][l];
+   for(int i=0;i<l-k+1;i++)
+    {
+    for(int j=0;j<k;j++)
+    {
+        int t=(int)(bitsq[i]-'0');
+        if(i==0&&j==0)
+        {
+            shift[j][i]=t;
+            for(int o=1;o<k;o++)
+            {
+            shift[o][i+o]=t;
+            }     
+        }
+        else if(i!=0&&j==0)  
+        {
+            
+            for(int x=1;x<k;x++)
+            {
+                if(shift[x][i]==0||shift[x][i]==1)
+                {
+                    t=xor(t,shift[x][i]);
+                }
+                else 
+                {
+                    t=t;
+                }  
+            }
+            
+             for(int ov=0;ov<k;ov++)
+            {
+            shift[ov][i+ov]=t;
+            }
+
+        }
+        else 
+        {
+            if(i-j<0)
+            {
+                shift[j][i]=0;   
+            }
+            else if(i>l-k)
+            {
+                shift[j][i]=0;
+            }
+            else 
+            {
+            continue;
+            }
+            
+        }
+
+       
+        
+    }
+            
+    } 
+    for(int u=0;u<l-k+1;u++)
+    {
+        decrypted[u]=shift[0][u];
+        
+        
+    }
+    return  decrypted;
+}
+
+int* parritybits(int n,int k,int y,int parity[ ],int encrypted[ ])
+{
+        int size=8*n+k-1+y;
+        
+        for(int i=0;i<y;i++)
+        {   
+            int no=0;
+            for(int j=pow(2,i)-1;j<size;j=j+2*pow(2,i))
+            {
+               for(int k=0;k<pow(2,i);k++)
+               {
+                   if(j+k>size-1)
+                   {
+                       break;
+                   }
+                   else
+                   { 
+                        if(parity[j+k]==1)
+                        {
+                            no=no+1;
+                        }
+                        else
+                        {
+                            no=no;
+                        }
+                   }
+               }
+            }
+            int v=pow(2,i)-1;
+            parity[v]=parbit(no);
+            
+        }
+
+
+
+
+
+
+
+
+return parity;
+}
+
+char* correctparity(int L,int n,int k,char bitsq[ ],char recieve[ ])
+{
+    int nopar =L-(8*n+k-1);
+    int errorbit=0;
+    for(int i=0;i<nopar;i++)
+    {
+        int no=0;
+        for(int j=pow(2,i)-1;j<L;j=j+2*pow(2,i))
+        {
+             for(int k=0;k<pow(2,i);k++)
+             {
+                 if(j+k>L-1)
+                   {
+                       break;
+                   }
+                   else if(recieve[j+k]=='1')
+                        {
+                            no=no+1;
+                        }
+                        else
+                        {
+                            no=no;
+                        }
+             }
+        }
+        errorbit=errorbit+parbit(no)*pow(2,i);
+        /*printf("%d",no);*/
+    }
+
+    if(errorbit!=0)
+    {
+        printf("Error detected and corrected!\n");
+        if(recieve[errorbit-1]=='1')
+        {
+            recieve[errorbit-1]='0';
+        }
+        else 
+        {
+            recieve[errorbit-1]='1';
+        }
+    }
+    else
+    {
+        NULL;
+    }
+
+    int p=0;
+    for(int i=1;i<=L;i++)
+    {
+        if(ispoweroftwo(i))
+        {
+            
+            p=p;
+        }
+        else 
+        {
+            bitsq[p]=recieve[i-1];
+            p=p+1;
+        }
+        
+    }
+
+/*for(int y=0;y<8*n+k-1;y++)
+{
+    printf("%c",bitsq[y]);
+}*/
+
+
+
+return bitsq;
+}
